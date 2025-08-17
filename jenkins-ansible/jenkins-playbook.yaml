@@ -1,0 +1,70 @@
+---
+- name: Install Jenkins on Ubuntu 22.04
+  hosts: jenkins
+  become: true
+  vars:
+    jenkins_repo_key_url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+  tasks:
+    - name: Ensure apt cache is up to date
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install dependencies & Java 17 (Temurin/OpenJDK)
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - fontconfig
+          - openjdk-17-jre
+        state: present
+
+
+    - name: Add Jenkins apt key
+      ansible.builtin.get_url:
+        url: "https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key"
+        dest: /usr/share/keyrings/jenkins-keyring.asc
+        mode: '0644'
+
+    - name: Add Jenkins apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/"
+        filename: "jenkins"
+        state: present
+
+    - name: Update apt cache after adding Jenkins repo
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+
+    - name: Ensure Jenkins is enabled and running
+      service:
+        name: jenkins
+        state: started
+        enabled: yes
+
+    - name: Wait for Jenkins HTTP port
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 8080
+        timeout: 300
+
+    - name: Wait for initial admin password file
+      ansible.builtin.wait_for:
+        path: /var/lib/jenkins/secrets/initialAdminPassword
+        state: present
+        timeout: 300
+
+    - name: Read initial admin password
+      ansible.builtin.slurp:
+        src: /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_admin_pw_b64
+
+    - name: Print initial admin password
+      ansible.builtin.debug:
+        msg: "Jenkins initial admin password: {{ jenkins_admin_pw_b64.content | b64decode }}"
