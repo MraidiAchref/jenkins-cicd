@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     stages {
-        stage('Mock stage') {
+        stage('try webhook') {
             steps {
-                echo 'Mocking...'
+                echo 'hello ...'
             }
         }
     }
