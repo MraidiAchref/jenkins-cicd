@@ -1,10 +1,15 @@
 pipeline {
     agent any
-
+    tools {
+        nodejs 'nodejs-22-16-0'
+    }
     stages {
-        stage('try webhook') {
+        stage('Test nodejs tool') {
             steps {
-                echo 'hello ...'
+                sh '''
+                    node -v     
+                    npm -v
+                '''
             }
         }
     }
