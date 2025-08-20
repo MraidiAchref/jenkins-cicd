@@ -9,6 +9,19 @@ pipeline {
                 sh 'npm install --no-audit'
             }
         }
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install --no-audit'
+            }
+        }
+        stage('OWASP Dependency Check') {
+            steps {
+                dependencyCheck additionalArguments: '''
+                --scan	\'./\'
+                --out \'./\'
+                --format \'ALL\'
+                --prettyPrint''', odcInstallation: 'OWASP-DepCheck-10'            }
+        }
     }
     post {
         always {
