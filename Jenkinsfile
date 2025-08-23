@@ -13,8 +13,8 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_API_KEY')]) {
                 dependencyCheck(
-                    odcInstallation: 'OWASP-DepCheck-10', 
-                    additionalArguments: "--scan . --out . --format ALL --prettyPrint --nvdApiKey ${NVD_API_KEY}"
+                    odcInstallation: 'OWASP-DepCheck-12', 
+                    additionalArguments: '--scan . --out . --format ALL --prettyPrint --nvdApiKey ' + env.NVD_API_KEY
                 )
                 }
             }
