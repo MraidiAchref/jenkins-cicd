@@ -21,6 +21,15 @@ pipeline {
             publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: './', reportFiles: 'dependency-check-jenkins.html', reportName: 'Dependency check HTML Report', reportTitles: '', useWrapperFileDirectly: true])
             }
         }
+        stage('Code coverage') {
+            steps {
+                catchError(buildResult: 'UNSTABLE', message: 'We have a problem with code coverage') {
+                    sh 'npm run coverage'
+                }
+                publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: './coverage/lcov-result', reportFiles: 'index.html', reportName: 'Code coverage HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+
+            }
+        }
     }
     post {
         always {
