@@ -40,6 +40,7 @@ pipeline {
                 $SONAR_SCANNER_HOME/bin/sonar-scanner \
                 -Dsonar.projectKey=cicd-with-jenkins \
                 -Dsonar.sources=app.js \
+                -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
                 -Dsonar.host.url=http://18.201.82.244:9000 \
                 -Dsonar.login=$SONAR_TOKEN
                 '''
