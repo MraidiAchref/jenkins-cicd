@@ -4,7 +4,7 @@ pipeline {
         nodejs 'nodejs-22-16-0'
     }
     environment {
-        NVD_API_KEY = crentials('NVD_API_KEY')
+        NVD_API_KEY = credentials('NVD_API_KEY')
     }
     stages {
         stage('Install Dependencies') {
