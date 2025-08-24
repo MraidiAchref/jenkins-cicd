@@ -37,7 +37,7 @@ pipeline {
         stage('SAST with SonarQube') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
-                    withSonarQubeEnv(sonarqube-server) {
+                    withSonarQubeEnv('sonarqube-server') {
                         sh '''
                         $SONAR_SCANNER_HOME/bin/sonar-scanner \
                         -Dsonar.projectKey=cicd-with-jenkins \
