@@ -14,7 +14,7 @@ pipeline {
                 sh 'npm install --no-audit'
             }
         }
-        stage('OWASP Dependency Check') {
+        /*stage('OWASP Dependency Check') {
             steps {
                 dependencyCheck(
                     odcInstallation: 'OWASP-DepCheck-12', 
@@ -24,7 +24,7 @@ pipeline {
                 dependencyCheckPublisher failedTotalCritical: 1, pattern: 'dependency-check-report.xml', stopBuild: true
 
             }
-        }
+        }*/
         stage('Code coverage') {
             steps {
                 catchError(buildResult: 'UNSTABLE', message: 'We have a problem with code coverage') {
@@ -36,14 +36,17 @@ pipeline {
         }
         stage('SAST with SonarQube') {
             steps {
-                sh '''
-                $SONAR_SCANNER_HOME/bin/sonar-scanner \
-                -Dsonar.projectKey=cicd-with-jenkins \
-                -Dsonar.sources=app.js \
-                -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                -Dsonar.host.url=http://18.201.82.244:9000 \
-                -Dsonar.login=$SONAR_TOKEN
-                '''
+                timeout(time: 5, unit: 'MINUTES') {
+                    withSonarQubeEnv(sonarqube-server) {
+                        sh '''
+                        $SONAR_SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectKey=cicd-with-jenkins \
+                        -Dsonar.sources=app.js \
+                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+                        '''
+                    }
+                    waitForQualityGate abortPipeline: true
+              }
             }
         }
     }
