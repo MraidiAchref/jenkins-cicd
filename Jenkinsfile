@@ -5,6 +5,8 @@ pipeline {
     }
     environment {
         NVD_API_KEY = credentials('NVD_API_KEY')
+        SONAR_TOKEN = credentials('SONAR_TOKEN')
+        SONAR_SCANNER_HOME = tool 'sonarqube-scanner-6.1.0'
     }
     stages {
         stage('Install Dependencies') {
@@ -30,6 +32,17 @@ pipeline {
                 }
 
 
+            }
+        }
+        stage('SAST with SonarQube') {
+            steps {
+                sh '''
+                £SONAR_SCANNER_HOME/bin/sonar-scanner \
+                -Dsonar.projectKey=cicd-with-jenkins \
+                -Dsonar.sources=app.js \
+                -Dsonar.host.url=http://18.201.82.244:9000 \
+                -Dsonar.login=$SONAR_TOKEN
+                '''
             }
         }
     }

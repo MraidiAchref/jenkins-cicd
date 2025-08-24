@@ -1,0 +1,6 @@
+sonar_user: sonar
+sonar_group: sonar
+sonar_zip: "sonarqube-{{ sonar_version }}.zip"
+sonar_url: "https://binaries.sonarsource.com/Distribution/sonarqube/{{ sonar_zip }}"
+sonar_current_dir: "{{ sonar_install_dir }}/current"
+java_package: openjdk-17-jdk

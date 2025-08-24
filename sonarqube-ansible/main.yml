@@ -1,0 +1,7 @@
+---
+- name: Provision SonarQube + PostgreSQL
+  hosts: sonarqube
+  become: true
+  roles:
+    - role: postgres
+    - role: sonarqube

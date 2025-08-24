@@ -1,0 +1,21 @@
+sonar_version: "9.9.5.90363"    
+sonar_listen_host: "0.0.0.0"
+sonar_listen_port: 9000
+sonar_install_dir: /opt/sonarqube
+
+# DB
+sonar_db_host: "127.0.0.1"
+sonar_db_port: 5432
+sonar_db_name: "sonarqube"
+sonar_db_user: "sonar"
+
+# JVM/search tuning
+sonar_search_java_opts: "-Dnode.store.allow_mmap=false"
+
+# Sysctl/limits (recommended by SonarSource)
+sysctl_params:
+  vm.max_map_count: "262144"
+  fs.file-max: "131072"
+limits_params:
+  nofile: "131072"
+  nproc: "8192"

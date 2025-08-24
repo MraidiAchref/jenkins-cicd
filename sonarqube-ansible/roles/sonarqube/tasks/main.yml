@@ -1,0 +1,99 @@
+---
+- name: Install Java + tools
+  apt:
+    name:
+      - "{{ java_package }}"
+      - unzip
+      - wget
+      - curl
+    state: present
+    update_cache: yes
+
+- name: Create sonar group
+  group:
+    name: "{{ sonar_group }}"
+    state: present
+
+- name: Create sonar user
+  user:
+    name: "{{ sonar_user }}"
+    group: "{{ sonar_group }}"
+    shell: /bin/bash
+    create_home: no
+    system: yes
+
+- name: Create install dir
+  file:
+    path: "{{ sonar_install_dir }}"
+    state: directory
+    owner: "{{ sonar_user }}"
+    group: "{{ sonar_group }}"
+    mode: '0755'
+
+- name: Download SonarQube
+  get_url:
+    url: "{{ sonar_url }}"
+    dest: "/tmp/{{ sonar_zip }}"
+    mode: '0644'
+    force: no
+
+- name: Unarchive SonarQube
+  unarchive:
+    src: "/tmp/{{ sonar_zip }}"
+    dest: "{{ sonar_install_dir }}"
+    remote_src: true
+    creates: "{{ sonar_install_dir }}/sonarqube-{{ sonar_version }}"
+
+- name: Symlink current -> version
+  file:
+    src: "{{ sonar_install_dir }}/sonarqube-{{ sonar_version }}"
+    dest: "{{ sonar_current_dir }}"
+    state: link
+    force: yes
+
+- name: Set ownership
+  file:
+    path: "{{ sonar_install_dir }}/sonarqube-{{ sonar_version }}"
+    state: directory
+    recurse: yes
+    owner: "{{ sonar_user }}"
+    group: "{{ sonar_group }}"
+
+- name: Apply sysctl settings
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  loop: "{{ sysctl_params|dict2items }}"
+
+- name: Set ulimits
+  copy:
+    dest: /etc/security/limits.d/99-sonarqube.conf
+    mode: '0644'
+    content: |
+      {{ sonar_user }} - nofile {{ limits_params.nofile }}
+      {{ sonar_user }} - nproc  {{ limits_params.nproc }}
+
+- name: Render sonar.properties
+  template:
+    src: sonar.properties.j2
+    dest: "{{ sonar_current_dir }}/conf/sonar.properties"
+    owner: "{{ sonar_user }}"
+    group: "{{ sonar_group }}"
+    mode: '0644'
+
+- name: Install systemd unit
+  template:
+    src: sonarqube.service.j2
+    dest: /etc/systemd/system/sonarqube.service
+    mode: '0644'
+  notify:
+    - daemon-reload
+    - restart sonarqube
+
+- name: Ensure SonarQube running
+  service:
+    name: sonarqube
+    state: started
+    enabled: yes

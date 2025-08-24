@@ -1,0 +1,11 @@
+# DB
+sonar.jdbc.username={{ sonar_db_user }}
+sonar.jdbc.password={{ sonar_db_password }}
+sonar.jdbc.url=jdbc:postgresql://{{ sonar_db_host }}:{{ sonar_db_port }}/{{ sonar_db_name }}
+
+# Web
+sonar.web.host={{ sonar_listen_host }}
+sonar.web.port={{ sonar_listen_port }}
+
+# Recommended
+sonar.search.javaAdditionalOpts={{ sonar_search_java_opts }}
