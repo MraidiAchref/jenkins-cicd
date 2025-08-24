@@ -18,7 +18,7 @@ pipeline {
                     odcInstallation: 'OWASP-DepCheck-12', 
                     additionalArguments: '--scan . --out . --format ALL --prettyPrint --nvdApiKey ' + env.NVD_API_KEY
                 )
-                }
+                
                 dependencyCheckPublisher failedTotalCritical: 1, pattern: 'dependency-check-report.xml', stopBuild: true
 
             }
