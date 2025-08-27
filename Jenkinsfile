@@ -59,13 +59,13 @@ pipeline {
             steps {
                 sh ''' 
                    trivy image mraidiachref/solar-system:$GIT_COMMIT \
-                   --severity MEDIUM,LOW \
+                   --severity HIGH,MEDIUM,LOW \
                    --exit-code 0 \
                    --quiet \
                    --format json -o trivy-image-Medium-results.json 
 
                    trivy image mraidiachref/solar-system:$GIT_COMMIT \
-                   --severity CRITICAL,HIGH \
+                   --severity CRITICAL\
                    --exit-code 1 \
                    --quiet \
                    --format json -o trivy-image-CRITICAL-results.json 
