@@ -55,12 +55,56 @@ pipeline {
             }
             
         }
+        stage('Trivy Vulnerability Scan') {
+            steps {
+                sh ''' 
+                   trivy image mraidiachref/solar-system:$GIT_COMMIT \
+                   --severity MEDIUM,LOW \
+                   --exit-code 0 \
+                   --quiet \
+                   --format json -o trivy-image-Medium-results.json 
+
+                   trivy image mraidiachref/solar-system:$GIT_COMMIT \
+                   --severity CRITICAL,HIGH \
+                   --exit-code 1 \
+                   --quiet \
+                   --format json -o trivy-image-CRITICAL-results.json 
+                '''
+            }
+            post {
+                always {
+                    sh ''' 
+                        trivy convert \
+                            --format template --template "@/usr/local/share/trivy/templates/html.tp1" \
+                            --output trivy-image-Medium-results.html trivy-image-Medium-results.json 
+
+                        trivy convert \
+                            --format template --template "@/usr/local/share/trivy/templates/html.tp1" \
+                            --output trivy-image-CRITICAL-results.html trivy-image-CRITICAL-results.json 
+
+                        trivy convert \
+                            --format template --template "@/usr/local/share/trivy/templates/junit.tp1" \
+                            --output trivy-image-Medium-results.xml trivy-image-Medium-results.json 
+
+                        trivy convert \
+                            --format template --template "@/usr/local/share/trivy/templates/junit.tp1" \
+                            --output trivy-image-CRITICAL-results.xml trivy-image-CRITICAL-results.json 
+                    '''
+                }
+    }
+            
+        }
+
     }
     post {
         always {
             publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: './', reportFiles: 'dependency-check-jenkins.html', reportName: 'Dependency check HTML Report', reportTitles: '', useWrapperFileDirectly: true])
 
             publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: './coverage/lcov-report', reportFiles: 'index.html', reportName: 'Code coverage HTML Report', reportTitles: '', useWrapperFileDirectly: true])
+
+            publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: './', reportFiles: 'trivy-image-CRITICAL-results.html', reportName: 'trivy critical vulnerabities report ', reportTitles: '', useWrapperFileDirectly: true])
+
+            publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: './', reportFiles: 'trivy-image-Medium-results.html', reportName: 'trivy medium vulnerabities report ', reportTitles: '', useWrapperFileDirectly: true])
         }
     }
 }
