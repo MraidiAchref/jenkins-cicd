@@ -26,3 +26,6 @@ zap*
 dependency*
 jenkins*
 trivy-image*
+terraform/
+sonarqube-ansible/
+jenkins-ansible/

@@ -49,6 +49,13 @@ pipeline {
               }
             }
         }
+        stage('Build docker image') {
+            steps {
+                steps {
+                    sh 'docker build -t mraidiachref/solar-system:$GIT_COMMIT .'
+                }
+            }
+        }
     }
     post {
         always {
