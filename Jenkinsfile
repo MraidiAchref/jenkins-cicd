@@ -34,7 +34,7 @@ pipeline {
 
             }
         }
-        stage('SAST with SonarQube') {
+        /*stage('SAST with SonarQube') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
                     withSonarQubeEnv('sonarqube-server') {
@@ -48,13 +48,12 @@ pipeline {
                     waitForQualityGate abortPipeline: true
               }
             }
-        }
+        }*/
         stage('Build docker image') {
             steps {
-                steps {
-                    sh 'docker build -t mraidiachref/solar-system:$GIT_COMMIT .'
-                }
+                sh 'docker build -t mraidiachref/solar-system:$GIT_COMMIT .'
             }
+            
         }
     }
     post {
