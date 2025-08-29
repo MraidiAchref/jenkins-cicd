@@ -95,7 +95,7 @@ pipeline {
         }
         stage('Push Docker Image') {   // plugin docker pipeline
             steps {
-                withDockerRegistry(credentialsId: 'DOCKER_HUB_TOKEN', url: '""') {
+                withDockerRegistry(credentialsId: 'DOCKER_HUB_TOKEN', url: "") {
                     sh 'docker push mraidiachref/solar-system:$GIT_COMMIT '
                 }
             }
