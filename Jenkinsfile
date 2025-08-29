@@ -91,9 +91,17 @@ pipeline {
                             --output trivy-image-CRITICAL-results.xml trivy-image-CRITICAL-results.json 
                     '''
                 }
-    }
+            }   
+        }
+        stage('Push Docker Image') {   // plugin docker pipeline
+            steps {
+                withDockerRegistry(credentialsId: 'DOCKER_HUB_TOKEN', url: '""') {
+                    sh 'docker push mraidiachref/solar-system:$GIT_COMMIT '
+                }
+            }
             
         }
+            
 
     }
     post {
