@@ -101,8 +101,24 @@ pipeline {
             }
             
         }
-            
+                    
+        stage('Update argocd manifests') {
+            steps {
+                sh '''
+                git config --global user.email "ci@localMraidi"
+                git config --global user.name "jenkins-ci"
+                rm -rf solar-system-manifests
+                git clone git@github.com:MraidiAchref/gitops-argocd.git
 
+                sed -i "s|image: mraidiachref/solar-system.*|image: mraidiachref/solar-system:${GIT_COMMIT}|" app-deploy.yml
+
+                git add app-deploy.yml
+                git commit -m "CI: update image to ${GIT_COMMIT}"
+                git push origin main
+                '''
+            }
+
+        }
     }
     post {
         always {
