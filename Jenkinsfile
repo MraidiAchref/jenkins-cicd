@@ -108,8 +108,6 @@ pipeline {
                 sh '''
                 git config --global user.email "ci@localMraidi"
                 git config --global user.name "jenkins-ci"
-                rm -rf solar-system-manifests
-                git clone git@github.com:MraidiAchref/gitops-argocd.git
 
                 rm -rf gitops-argocd
                 git clone https://$GITHUB_PAT@github.com/MraidiAchref/gitops-argocd.git
