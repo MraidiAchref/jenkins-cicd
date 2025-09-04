@@ -6,6 +6,7 @@ pipeline {
     environment {
         NVD_API_KEY = credentials('NVD_API_KEY')
         SONAR_TOKEN = credentials('SONAR_TOKEN')
+        MONGO_URI = credentials('MONGO_URI')
         SONAR_SCANNER_HOME = tool 'sonarqube-scanner-6.1.0'
     }
     stages {
