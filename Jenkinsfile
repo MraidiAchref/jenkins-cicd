@@ -50,10 +50,9 @@ pipeline {
                 $SONAR_SCANNER_HOME/bin/sonar-scanner \
                     -Dsonar.projectKey=cicd-with-jenkins \
                     -Dsonar.projectName=cicd-with-jenkins \
-                    -Dsonar.sources=. \
-                    -Dsonar.exclusions=**/node_modules/**,**/coverage/** \
+                    -Dsonar.sources=app.js,app-controller.js \
                     -Dsonar.tests=. \
-                    -Dsonar.test.inclusions=**/*test.js \
+                    -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/*.html,**/trivy-*.json,**/trivy-*.xml,**/dependency-check-report.xml,**/dependency-check-*.xml,**/reports/**, **/*.min.js,**/terraform/**,**/*.tf,**/*.tfvars,**/.git/**,**/sonarqube-ansible/**  \
                     -Dsonar.javascript.lcov.reportPaths="$PWD/coverage/lcov.info"
                 '''
             }
