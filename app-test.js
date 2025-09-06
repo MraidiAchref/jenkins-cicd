@@ -1,190 +1,257 @@
-let mongoose = require("mongoose");
-let server = require("./app");
-let chai = require("chai");
-let chaiHttp = require("chai-http");
+const path = require('path');
+const fs = require('fs');
+const sinon = require('sinon');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const proxyquire = require('proxyquire').noCallThru();
 
-
-// Assertion 
 chai.should();
-chai.use(chaiHttp); 
+chai.use(chaiHttp);
 
-describe('Planets API Suite', () => {
+/* ----------------------------- Mock: mongoose ----------------------------- */
+let findOneMode = 'resolve'; // 'resolve' | 'reject'
+let findOneValue = null;
 
-    describe('Fetching Planet Details', () => {
-        it('it should fetch a planet named Mercury', (done) => {
-            let payload = {
-                id: 1
-            }
-          chai.request(server)
-              .post('/planet')
-              .send(payload)
-              .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('id').eql(1);
-                    res.body.should.have.property('name').eql('Mercury');
-                done();
-              });
-        });
+const mockMongoose = {
+  connect: sinon.stub().resolves(), // no real DB
+  Schema: function () {},
+  model: sinon.stub().callsFake(() => ({
+    findOne: sinon.stub().callsFake(() => ({
+      lean() { return this; },
+      exec: sinon.stub().callsFake(() => {
+        return findOneMode === 'resolve'
+          ? Promise.resolve(findOneValue)
+          : Promise.reject(findOneValue);
+      }),
+    })),
+  })),
+};
 
-        it('it should fetch a planet named Venus', (done) => {
-            let payload = {
-                id: 2
-            }
-          chai.request(server)
-              .post('/planet')
-              .send(payload)
-              .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('id').eql(2);
-                    res.body.should.have.property('name').eql('Venus');
-                done();
-              });
-        });
-
-        it('it should fetch a planet named Earth', (done) => {
-            let payload = {
-                id: 3
-            }
-          chai.request(server)
-              .post('/planet')
-              .send(payload)
-              .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('id').eql(3);
-                    res.body.should.have.property('name').eql('Earth');
-                done();
-              });
-        });
-        it('it should fetch a planet named Mars', (done) => {
-            let payload = {
-                id: 4
-            }
-          chai.request(server)
-              .post('/planet')
-              .send(payload)
-              .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('id').eql(4);
-                    res.body.should.have.property('name').eql('Mars');
-                done();
-              });
-        });
-
-        it('it should fetch a planet named Jupiter', (done) => {
-            let payload = {
-                id: 5
-            }
-          chai.request(server)
-              .post('/planet')
-              .send(payload)
-              .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('id').eql(5);
-                    res.body.should.have.property('name').eql('Jupiter');
-                done();
-              });
-        });
-
-        it('it should fetch a planet named Satrun', (done) => {
-            let payload = {
-                id: 6
-            }
-          chai.request(server)
-              .post('/planet')
-              .send(payload)
-              .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('id').eql(6);
-                    res.body.should.have.property('name').eql('Saturn');
-                done();
-              });
-        });
-
-        it('it should fetch a planet named Uranus', (done) => {
-            let payload = {
-                id: 7
-            }
-          chai.request(server)
-              .post('/planet')
-              .send(payload)
-              .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('id').eql(7);
-                    res.body.should.have.property('name').eql('Uranus');
-                done();
-              });
-        });
-
-        it('it should fetch a planet named Neptune', (done) => {
-            let payload = {
-                id: 8
-            }
-          chai.request(server)
-              .post('/planet')
-              .send(payload)
-              .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('id').eql(8);
-                    res.body.should.have.property('name').eql('Neptune');
-                done();
-              });
-        });
-
-        // it('it should fetch a planet named Pluto', (done) => {
-        //     let payload = {
-        //         id: 9
-        //     }
-        //   chai.request(server)
-        //       .post('/planet')
-        //       .send(payload)
-        //       .end((err, res) => {
-        //             res.should.have.status(200);
-        //             res.body.should.have.property('id').eql(9);
-        //             res.body.should.have.property('name').eql('Sun');
-        //         done();
-        //       });
-        // });
-
-
-    });        
+/* ---------------------------- Load app WITH mock --------------------------- */
+const app = proxyquire('../app', {
+  mongoose: mockMongoose,
 });
 
-//Use below test case to achieve coverage
-describe('Testing Other Endpoints', () => {
+/* ------------------------------- Test Suite -------------------------------- */
+describe('Planets API Suite (with mocked Mongoose)', () => {
+  before(() => {
+    process.env.NODE_ENV = 'test';
+  });
 
-    describe('it should fetch OS Details', () => {
-        it('it should fetch OS details', (done) => {
-          chai.request(server)
-              .get('/os')
-              .end((err, res) => {
-                    res.should.have.status(200);
-                done();
-              });
+  afterEach(() => {
+    sinon.restore();
+    findOneMode = 'resolve';
+    findOneValue = null;
+  });
+
+  describe('Fetching Planet Details', () => {
+    it('should fetch Mercury (id=1)', (done) => {
+      findOneValue = { id: 1, name: 'Mercury' };
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 1 })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ id: 1, name: 'Mercury' });
+          done();
         });
     });
 
-    describe('it should fetch Live Status', () => {
-        it('it checks Liveness endpoint', (done) => {
-          chai.request(server)
-              .get('/live')
-              .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('status').eql('live');
-                done();
-              });
+    it('should fetch Venus (id=2)', (done) => {
+      findOneValue = { id: 2, name: 'Venus' };
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 2 })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ id: 2, name: 'Venus' });
+          done();
         });
     });
 
-    describe('it should fetch Ready Status', () => {
-        it('it checks Readiness endpoint', (done) => {
-          chai.request(server)
-              .get('/ready')
-              .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('status').eql('ready');
-                done();
-              });
+    it('should fetch Earth (id=3)', (done) => {
+      findOneValue = { id: 3, name: 'Earth' };
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 3 })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ id: 3, name: 'Earth' });
+          done();
         });
     });
 
+    it('should fetch Mars (id=4)', (done) => {
+      findOneValue = { id: 4, name: 'Mars' };
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 4 })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ id: 4, name: 'Mars' });
+          done();
+        });
+    });
+
+    it('should fetch Jupiter (id=5)', (done) => {
+      findOneValue = { id: 5, name: 'Jupiter' };
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 5 })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ id: 5, name: 'Jupiter' });
+          done();
+        });
+    });
+
+    it('should fetch Saturn (id=6)', (done) => {
+      findOneValue = { id: 6, name: 'Saturn' }; // fix spelling
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 6 })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ id: 6, name: 'Saturn' });
+          done();
+        });
+    });
+
+    it('should fetch Uranus (id=7)', (done) => {
+      findOneValue = { id: 7, name: 'Uranus' };
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 7 })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ id: 7, name: 'Uranus' });
+          done();
+        });
+    });
+
+    it('should fetch Neptune (id=8)', (done) => {
+      findOneValue = { id: 8, name: 'Neptune' };
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 8 })
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ id: 8, name: 'Neptune' });
+          done();
+        });
+    });
+
+    it('400 when id is not a number', (done) => {
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 'abc' })
+        .end((err, res) => {
+          res.should.have.status(400);
+          res.body.should.deep.equal({ error: 'Invalid id' });
+          done();
+        });
+    });
+
+    it('404 when planet not found', (done) => {
+      findOneValue = null; // findOne resolves to null
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 999 })
+        .end((err, res) => {
+          res.should.have.status(404);
+          res.body.should.deep.equal({ error: 'Planet not found' });
+          done();
+        });
+    });
+
+    it('500 when DB error occurs', (done) => {
+      findOneMode = 'reject';
+      findOneValue = new Error('db down');
+      chai.request(app)
+        .post('/planet')
+        .send({ id: 2 })
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.body.should.deep.equal({ error: 'Server error' });
+          done();
+        });
+    });
+  });
+
+  describe('Testing Other Endpoints', () => {
+    it('GET /os returns 200', (done) => {
+      chai.request(app)
+        .get('/os')
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.have.property('env', 'test');
+          res.body.should.have.property('os');
+          done();
+        });
+    });
+
+    it('GET /live returns {status: "live"}', (done) => {
+      chai.request(app)
+        .get('/live')
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ status: 'live' });
+          done();
+        });
+    });
+
+    it('GET /ready returns {status: "ready"}', (done) => {
+      chai.request(app)
+        .get('/ready')
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ status: 'ready' });
+          done();
+        });
+    });
+
+    it('GET /api-docs returns JSON on success', (done) => {
+      const readStub = sinon.stub(fs, 'readFile')
+        .callsFake((_, __, cb) =>
+          cb(null, JSON.stringify({ openapi: '3.0.0', info: { title: 'API' } }))
+        );
+
+      chai.request(app)
+        .get('/api-docs')
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.body.should.deep.equal({ openapi: '3.0.0', info: { title: 'API' } });
+          readStub.restore();
+          done();
+        });
+    });
+
+    it('GET /api-docs returns 500 on read error', (done) => {
+      const readStub = sinon.stub(fs, 'readFile')
+        .callsFake((_, __, cb) => cb(new Error('boom')));
+
+      chai.request(app)
+        .get('/api-docs')
+        .end((err, res) => {
+          res.should.have.status(500);
+          res.text.should.contain('Error reading file');
+          readStub.restore();
+          done();
+        });
+    });
+
+    it('GET / serves index.html (created during test)', (done) => {
+      const appDir = path.dirname(require.resolve('../app.js'));
+      const idx = path.join(appDir, 'index.html');
+      fs.writeFileSync(idx, '<!doctype html><html><body>OK</body></html>');
+      chai.request(app)
+        .get('/')
+        .end((err, res) => {
+          res.should.have.status(200);
+          res.text.should.contain('OK');
+          fs.unlinkSync(idx);
+          done();
+        });
+    });
+  });
 });
