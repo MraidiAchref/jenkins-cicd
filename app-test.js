@@ -3,6 +3,8 @@ const fs = require('fs');
 const sinon = require('sinon');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
+const app = require('./app');
+
 const proxyquire = require('proxyquire').noCallThru();
 
 chai.should();
