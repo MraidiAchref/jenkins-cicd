@@ -22,9 +22,9 @@ mongoose.connect(process.env.MONGO_URI, { dbName: 'mydb' })
     process.exit(1);
   });
 
-var Schema = mongoose.Schema;
+let Schema = mongoose.Schema;
 
-var dataSchema = new Schema({
+let dataSchema = new Schema({
     name: String,
     id: Number,
     description: String,
@@ -32,7 +32,7 @@ var dataSchema = new Schema({
     velocity: String,
     distance: String
 });
-var planetModel = mongoose.model('planets', dataSchema);
+let planetModel = mongoose.model('planets', dataSchema);
 
 
 
@@ -43,7 +43,7 @@ app.post('/planet', async (req, res) => {
       return res.status(400).json({ error: 'Invalid id' });
     }
 
-    const planetData = await planetModel.findOne({ id }).lean(); // no callback
+    const planetData = await planetModel.findOne({ id }).lean().exec();
     if (!planetData) {
       return res.status(404).json({ error: 'Planet not found' });
     }
