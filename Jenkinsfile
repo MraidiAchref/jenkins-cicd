@@ -54,7 +54,7 @@ pipeline {
                     -Dsonar.exclusions=**/node_modules/**,**/coverage/** \
                     -Dsonar.tests=. \
                     -Dsonar.test.inclusions=**/*test.js \
-                    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                    -Dsonar.javascript.lcov.reportPaths="$PWD/coverage/lcov.info"
                 '''
             }
             waitForQualityGate abortPipeline: true
