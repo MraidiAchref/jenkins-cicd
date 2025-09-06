@@ -144,6 +144,33 @@ pipeline {
             publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: './', reportFiles: 'trivy-image-CRITICAL-results.html', reportName: 'trivy critical vulnerabities report ', reportTitles: '', useWrapperFileDirectly: true])
 
             publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: './', reportFiles: 'trivy-image-Medium-results.html', reportName: 'trivy medium vulnerabities report ', reportTitles: '', useWrapperFileDirectly: true])
+        
+        }
+        success {
+            emailext(
+            subject: "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            to: 'mradiachref@gmail.com',
+            mimeType: 'text/html',
+            body: """
+                <h2>Build SUCCESS</h2>
+                <p>Job: ${env.JOB_NAME}</p>
+                <p>Build: #${env.BUILD_NUMBER}</p>
+                <p><a href="${env.BUILD_URL}">Voir le détail</a></p>
+            """
+            )
+        }
+        failure {
+            emailext(
+            subject: "🛑 FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            to: 'mradiachref@gmail.com',
+            attachLog: true,
+            mimeType: 'text/html',
+            body: """
+                <h2>Build FAILURE</h2>
+                <p>Pipeline échoué: ${env.JOB_NAME} (#${env.BUILD_NUMBER})</p>
+                <p><a href="${env.BUILD_URL}console">Voir la console</a></p>
+            """
+            )
         }
     }
 }
