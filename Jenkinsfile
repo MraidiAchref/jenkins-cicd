@@ -15,7 +15,7 @@ pipeline {
                 sh 'npm install --no-audit'
             }
         }
-        /*stage('OWASP Dependency Check') {
+        stage('OWASP Dependency Check') {
             steps {
                 dependencyCheck(
                     odcInstallation: 'OWASP-DepCheck-12', 
@@ -25,7 +25,7 @@ pipeline {
                 dependencyCheckPublisher failedTotalCritical: 1, pattern: 'dependency-check-report.xml', stopBuild: true
 
             }
-        }*/
+        }
         stage('Code coverage') {
             steps {
                 catchError(buildResult: 'UNSTABLE', message: 'We have a problem with code coverage') {
@@ -35,7 +35,7 @@ pipeline {
 
             }
         }
-        /*stage('SAST with SonarQube') {
+        stage('SAST with SonarQube') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
                     withSonarQubeEnv('sonarqube-server') {
@@ -49,7 +49,7 @@ pipeline {
                     waitForQualityGate abortPipeline: true
               }
             }
-        }*/
+        }
         stage('Build docker image') {
             steps {
                 sh 'docker build -t mraidiachref/solar-system:$GIT_COMMIT .'
