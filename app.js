@@ -4,7 +4,12 @@ const express = require('express');
 const OS = require('os');
 const bodyParser = require('body-parser');
 const mongoose = require("mongoose");
+const helmet = require('helmet');
+
 const app = express();
+app.disable('x-powered-by'); 
+app.use(helmet());  
+
 const cors = require('cors')
 const serverless = require('serverless-http')
 require('dotenv').config(); 
