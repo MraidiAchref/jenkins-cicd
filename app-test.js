@@ -242,7 +242,7 @@ describe('Planets API Suite (with mocked Mongoose)', () => {
     });
 
     it('GET / serves index.html (created during test)', (done) => {
-      const appDir = path.dirname(require.resolve('../app.js'));
+      const appDir = path.dirname(require.resolve('./app.js'));
       const idx = path.join(appDir, 'index.html');
       fs.writeFileSync(idx, '<!doctype html><html><body>OK</body></html>');
       chai.request(app)
