@@ -18,15 +18,15 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '/')));
 app.use(cors())
 
-mongoose.connect(process.env.MONGO_URI, { dbName: 'mydb' })
-  .then(() => {
-    console.log('MongoDB Connection Successful');
-  })
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
+const shouldConnectDb = process.env.NODE_ENV !== 'test';
 
+if (shouldConnectDb) {
+  mongoose.connect(process.env.MONGO_URI, { dbName: 'mydb' })
+    .then(() => console.log('MongoDB Connection Successful'))
+    .catch(err => {
+      console.error('MongoDB connection error:', err);
+    });
+}
 let Schema = mongoose.Schema;
 
 let dataSchema = new Schema({
@@ -97,7 +97,9 @@ app.get('/ready',   function(req, res) {
     });
 })
 
-app.listen(3000, () => { console.log("Server successfully running on port - " +3000); })
+if (require.main === module) {
+  app.listen(3000, () => console.log('Server successfully running on port - 3000'));
+}
 module.exports = app;
 
 //module.exports.handler = serverless(app)

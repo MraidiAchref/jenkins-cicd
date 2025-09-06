@@ -27,28 +27,39 @@ pipeline {
             }
         }
         stage('Code coverage') {
-            steps {
-                catchError(buildResult: 'UNSTABLE', message: 'We have a problem with code coverage') {
-                    sh 'npm run coverage'
-                }
-
-
+        steps {
+            catchError(buildResult: 'UNSTABLE', message: 'We have a problem with code coverage') {
+            sh '''
+                export NODE_ENV=test
+                npm ci --no-audit
+                npm run coverage
+                echo "=== Coverage dir ==="
+                ls -la coverage || true
+                echo "=== Verify mapping ==="
+                grep -m1 "^SF:" coverage/lcov.info || true
+                head -n 20 coverage/lcov.info || true
+            '''
             }
         }
+        }
         stage('SAST with SonarQube') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    withSonarQubeEnv('sonarqube-server') {
-                        sh '''
-                        $SONAR_SCANNER_HOME/bin/sonar-scanner \
-                        -Dsonar.projectKey=cicd-with-jenkins \
-                        -Dsonar.sources=app.js \
-                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                        '''
-                    }
-                    waitForQualityGate abortPipeline: true
-              }
+        steps {
+            timeout(time: 5, unit: 'MINUTES') {
+            withSonarQubeEnv('sonarqube-server') {
+                sh '''
+                $SONAR_SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectKey=cicd-with-jenkins \
+                    -Dsonar.projectName=cicd-with-jenkins \
+                    -Dsonar.sources=. \
+                    -Dsonar.exclusions=**/node_modules/**,**/coverage/** \
+                    -Dsonar.tests=. \
+                    -Dsonar.test.inclusions=**/*test.js \
+                    -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                '''
             }
+            waitForQualityGate abortPipeline: true
+            }
+        }
         }
         stage('Build docker image') {
             steps {
