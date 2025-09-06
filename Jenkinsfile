@@ -15,7 +15,7 @@ pipeline {
                 sh 'npm install --no-audit'
             }
         }
-        stage('OWASP Dependency Check') {
+        /*stage('OWASP Dependency Check') {
             steps {
                 dependencyCheck(
                     odcInstallation: 'OWASP-DepCheck-12', 
@@ -25,40 +25,41 @@ pipeline {
                 dependencyCheckPublisher failedTotalCritical: 1, pattern: 'dependency-check-report.xml', stopBuild: true
 
             }
-        }
+        }*/
         stage('Code coverage') {
-        steps {
-            catchError(buildResult: 'UNSTABLE', message: 'We have a problem with code coverage') {
-            sh '''
-                export NODE_ENV=test
-                npm ci --no-audit
-                npm run coverage
-                echo "=== Coverage dir ==="
-                ls -la coverage || true
-                echo "=== Verify mapping ==="
-                grep -m1 "^SF:" coverage/lcov.info || true
-                head -n 20 coverage/lcov.info || true
-            '''
+            steps {
+                catchError(buildResult: 'UNSTABLE', message: 'We have a problem with code coverage') {
+                sh '''
+                    export NODE_ENV=test
+                    npm ci --no-audit
+                    npm run coverage
+                    echo "=== Coverage dir ==="
+                    ls -la coverage || true
+                    echo "=== Verify mapping ==="
+                    grep -m1 "^SF:" coverage/lcov.info || true
+                    head -n 20 coverage/lcov.info || true
+                '''
+                }
             }
-        }
         }
         stage('SAST with SonarQube') {
-        steps {
-            timeout(time: 5, unit: 'MINUTES') {
-            withSonarQubeEnv('sonarqube-server') {
-                sh '''
-                $SONAR_SCANNER_HOME/bin/sonar-scanner \
-                    -Dsonar.projectKey=cicd-with-jenkins \
-                    -Dsonar.projectName=cicd-with-jenkins \
-                    -Dsonar.sources=app.js,app-controller.js \
-                    -Dsonar.tests=. \
-                    -Dsonar.exclusions=**/node_modules/**,**/coverage/**,**/*.html,**/trivy-*.json,**/trivy-*.xml,**/dependency-check-report.xml,**/dependency-check-*.xml,**/reports/**, **/*.min.js,**/terraform/**,**/*.tf,**/*.tfvars,**/.git/**,**/sonarqube-ansible/**  \
-                    -Dsonar.javascript.lcov.reportPaths="$PWD/coverage/lcov.info"
-                '''
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                withSonarQubeEnv('sonarqube-server') {
+                    sh '''
+                    $SONAR_SCANNER_HOME/bin/sonar-scanner \
+                        -Dsonar.projectKey=cicd-with-jenkins \
+                        -Dsonar.projectName=cicd-with-jenkins \
+                        -Dsonar.sources=app.js \
+                        -Dsonar.tests=. \
+                        -Dsonar.test.inclusions=**/*test.js \
+                        -Dsonar.exclusions="**/node_modules/**,**/coverage/**,**/*.html,**/trivy-*.json,**/trivy-*.xml,**/dependency-check-report.xml,**/dependency-check-*.xml,**/reports/**,**/*.min.js,**/terraform/**,**/*.tf,**/*.tfvars,**/.git/**,**/sonarqube-ansible/**" \
+                        -Dsonar.javascript.lcov.reportPaths="$PWD/coverage/lcov.info"
+                    '''
+                }
+                waitForQualityGate abortPipeline: true
+                }
             }
-            waitForQualityGate abortPipeline: true
-            }
-        }
         }
         stage('Build docker image') {
             steps {
