@@ -9,6 +9,21 @@ pipeline {
         MONGO_URI = credentials('MONGO_URI')
         SONAR_SCANNER_HOME = tool 'sonarqube-scanner-6.1.0'
     }
+    stage('Resolve committer email') {
+        steps {
+            script {
+                env.NOTIFY_TO = sh(
+                    script: "git log -1 --pretty=format:'%ae'",
+                    returnStdout: true
+                ).trim()
+
+                if (!env.NOTIFY_TO || env.NOTIFY_TO.contains("noreply")) {
+                    env.NOTIFY_TO = "mradiachref@gmail.com"   // fallback
+                }
+                echo "Will notify: ${env.NOTIFY_TO}"
+            }
+        }
+    }
     stages {
         stage('Install Dependencies') {
             steps {
@@ -147,9 +162,9 @@ pipeline {
         
         }
         success {
-            emailext(
+            mail(
             subject: "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            to: 'mradiachref@gmail.com',
+            to: env.NOTIFY_TO,
             mimeType: 'text/html',
             body: """
                 <h2>Build SUCCESS</h2>
@@ -160,9 +175,9 @@ pipeline {
             )
         }
         failure {
-            emailext(
+            mail(
             subject: "🛑 FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            to: 'mradiachref@gmail.com',
+            to: env.NOTIFY_TO,
             attachLog: true,
             mimeType: 'text/html',
             body: """
