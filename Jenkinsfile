@@ -171,7 +171,7 @@ pipeline {
                 <h2>Build SUCCESS</h2>
                 <p>Job: ${env.JOB_NAME}</p>
                 <p>Build: #${env.BUILD_NUMBER}</p>
-                <p><a href="${env.BUILD_URL}">Voir le détail</a></p>
+                <p><a href="${env.BUILD_URL}">View Details/a></p>
             """
             )
         }
@@ -182,8 +182,9 @@ pipeline {
             mimeType: 'text/html',
             body: """
                 <h2>Build FAILURE</h2>
-                <p>Pipeline échoué: ${env.JOB_NAME} (#${env.BUILD_NUMBER})</p>
-                <p><a href="${env.BUILD_URL}console">Voir la console</a></p>
+                <p>Pipeline failed: ${env.JOB_NAME} (#${env.BUILD_NUMBER})</p>
+                <p><b>Last stage:</b> ${env.STAGE_NAME ?: 'unknown'}</p>
+                <p><a href="${env.BUILD_URL}console">View console</a></p>
             """
             )
         }
