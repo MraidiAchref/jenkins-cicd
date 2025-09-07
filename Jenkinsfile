@@ -171,7 +171,7 @@ pipeline {
                 <h2>Build SUCCESS</h2>
                 <p>Job: ${env.JOB_NAME}</p>
                 <p>Build: #${env.BUILD_NUMBER}</p>
-                <p><a href="${env.BUILD_URL}">View Details/a></p>
+                <p><a href="${env.BUILD_URL}">View Details</a></p>
             """
             )
         }
