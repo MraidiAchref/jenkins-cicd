@@ -179,7 +179,6 @@ pipeline {
             mail(
             subject: "🛑 FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
             to: env.NOTIFY_TO,
-            attachLog: true,
             mimeType: 'text/html',
             body: """
                 <h2>Build FAILURE</h2>
