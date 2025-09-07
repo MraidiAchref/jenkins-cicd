@@ -9,22 +9,23 @@ pipeline {
         MONGO_URI = credentials('MONGO_URI')
         SONAR_SCANNER_HOME = tool 'sonarqube-scanner-6.1.0'
     }
-    stage('Resolve committer email') {
-        steps {
-            script {
-                env.NOTIFY_TO = sh(
-                    script: "git log -1 --pretty=format:'%ae'",
-                    returnStdout: true
-                ).trim()
 
-                if (!env.NOTIFY_TO || env.NOTIFY_TO.contains("noreply")) {
-                    env.NOTIFY_TO = "mradiachref@gmail.com"   // fallback
+    stages {
+        stage('Resolve committer email') {
+            steps {
+                script {
+                    env.NOTIFY_TO = sh(
+                        script: "git log -1 --pretty=format:'%ae'",
+                        returnStdout: true
+                    ).trim()
+
+                    if (!env.NOTIFY_TO || env.NOTIFY_TO.contains("noreply")) {
+                        env.NOTIFY_TO = "mradiachref@gmail.com"   // fallback
+                    }
+                    echo "Will notify: ${env.NOTIFY_TO}"
                 }
-                echo "Will notify: ${env.NOTIFY_TO}"
             }
         }
-    }
-    stages {
         stage('Install Dependencies') {
             steps {
                 sh 'npm install --no-audit'
